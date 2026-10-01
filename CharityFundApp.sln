@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CharityFundApp", "CharityFundApp\CharityFundApp.csproj", "{9044856C-9B77-445A-AB70-8FB69DD41D19}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CharityFundApp.Tests", "CharityFundApp.Tests\CharityFundApp.Tests.csproj", "{9AA28A2B-9B57-4F24-9405-B3D898D59C32}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9044856C-9B77-445A-AB70-8FB69DD41D19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9044856C-9B77-445A-AB70-8FB69DD41D19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9044856C-9B77-445A-AB70-8FB69DD41D19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9044856C-9B77-445A-AB70-8FB69DD41D19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AA28A2B-9B57-4F24-9405-B3D898D59C32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AA28A2B-9B57-4F24-9405-B3D898D59C32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AA28A2B-9B57-4F24-9405-B3D898D59C32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AA28A2B-9B57-4F24-9405-B3D898D59C32}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

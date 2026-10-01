@@ -1,0 +1,26 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Python artifacts
+__pycache__/
+*.pyc
+
+# Temporary scratch scripts
+example_analysis.txt
+example_doc_dump.txt
+verification_report.txt
+check_details.py
+inspect_docx.py
+test_helpers.py
+test_table_helper.py
+verify_presentation.py
