@@ -87,21 +87,46 @@ namespace CharityFundApp.DataAccess
 
         public int Insert(Recipient r)
         {
-            string sql = @"
-                INSERT INTO Recipients (FullName, CategoryId, Phone, Address, NeedDescription, Status, RegistrationDate)
-                VALUES (@FullName, @CategoryId, @Phone, @Address, @NeedDescription, @Status, @RegistrationDate);
-                SELECT SCOPE_IDENTITY();";
+            string sql;
+            SqlParameter[] parameters;
 
-            var parameters = new[]
+            if (DatabaseHelper.CurrentProvider == DatabaseProvider.Sqlite)
             {
-                new SqlParameter("@FullName", r.FullName),
-                new SqlParameter("@CategoryId", r.CategoryId),
-                new SqlParameter("@Phone", DatabaseHelper.ToDbValue(r.Phone)),
-                new SqlParameter("@Address", DatabaseHelper.ToDbValue(r.Address)),
-                new SqlParameter("@NeedDescription", r.NeedDescription),
-                new SqlParameter("@Status", r.Status),
-                new SqlParameter("@RegistrationDate", r.RegistrationDate)
-            };
+                sql = @"
+                    INSERT INTO Recipients (FullName, CategoryId, Phone, Address, NeedDescription, Status, RegistrationDate, CreatedAt)
+                    VALUES (@FullName, @CategoryId, @Phone, @Address, @NeedDescription, @Status, @RegistrationDate, @CreatedAt);
+                    SELECT SCOPE_IDENTITY();";
+
+                parameters = new[]
+                {
+                    new SqlParameter("@FullName", r.FullName),
+                    new SqlParameter("@CategoryId", r.CategoryId),
+                    new SqlParameter("@Phone", DatabaseHelper.ToDbValue(r.Phone)),
+                    new SqlParameter("@Address", DatabaseHelper.ToDbValue(r.Address)),
+                    new SqlParameter("@NeedDescription", r.NeedDescription),
+                    new SqlParameter("@Status", r.Status),
+                    new SqlParameter("@RegistrationDate", r.RegistrationDate),
+                    new SqlParameter("@CreatedAt", r.RegistrationDate.ToString("yyyy-MM-dd HH:mm:ss"))
+                };
+            }
+            else
+            {
+                sql = @"
+                    INSERT INTO Recipients (FullName, CategoryId, Phone, Address, NeedDescription, Status, RegistrationDate)
+                    VALUES (@FullName, @CategoryId, @Phone, @Address, @NeedDescription, @Status, @RegistrationDate);
+                    SELECT SCOPE_IDENTITY();";
+
+                parameters = new[]
+                {
+                    new SqlParameter("@FullName", r.FullName),
+                    new SqlParameter("@CategoryId", r.CategoryId),
+                    new SqlParameter("@Phone", DatabaseHelper.ToDbValue(r.Phone)),
+                    new SqlParameter("@Address", DatabaseHelper.ToDbValue(r.Address)),
+                    new SqlParameter("@NeedDescription", r.NeedDescription),
+                    new SqlParameter("@Status", r.Status),
+                    new SqlParameter("@RegistrationDate", r.RegistrationDate)
+                };
+            }
 
             var newId = DatabaseHelper.ExecuteScalar(sql, parameters);
             return Convert.ToInt32(newId);
