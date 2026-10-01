@@ -337,6 +337,28 @@ namespace CharityFundApp.DataAccess
                         using var cmdAlter = new SqliteCommand("ALTER TABLE Recipients ADD COLUMN RegistrationDate TEXT NOT NULL DEFAULT '2026-01-16';", connCheck);
                         cmdAlter.ExecuteNonQuery();
                     }
+
+                    using var cmdExpCheck = new SqliteCommand("PRAGMA table_info(Expenses);", connCheck);
+                    using var expReader = cmdExpCheck.ExecuteReader();
+                    bool hasExpCat = false;
+                    while (expReader.Read())
+                    {
+                        if (string.Equals(expReader["name"]?.ToString(), "ExpenseCategory", StringComparison.OrdinalIgnoreCase))
+                        {
+                            hasExpCat = true;
+                            break;
+                        }
+                    }
+                    expReader.Close();
+                    if (!hasExpCat)
+                    {
+                        using var cmdAddCat = new SqliteCommand("ALTER TABLE Expenses ADD COLUMN ExpenseCategory TEXT NOT NULL DEFAULT 'Адресная помощь';", connCheck);
+                        cmdAddCat.ExecuteNonQuery();
+                        using var cmdAddDoc = new SqliteCommand("ALTER TABLE Expenses ADD COLUMN DocumentNumber TEXT NOT NULL DEFAULT 'ПП-001';", connCheck);
+                        cmdAddDoc.ExecuteNonQuery();
+                        using var cmdAddDesc = new SqliteCommand("ALTER TABLE Expenses ADD COLUMN Description TEXT NULL;", connCheck);
+                        cmdAddDesc.ExecuteNonQuery();
+                    }
                 }
                 catch
                 {
@@ -421,10 +443,13 @@ namespace CharityFundApp.DataAccess
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ProjectId INTEGER NOT NULL,
                     RecipientId INTEGER NULL,
+                    ExpenseCategory TEXT NOT NULL DEFAULT 'Адресная помощь',
                     Amount REAL NOT NULL,
                     ExpenseDate TEXT NOT NULL,
-                    Purpose TEXT NOT NULL,
-                    ResponsiblePerson TEXT NOT NULL,
+                    DocumentNumber TEXT NOT NULL DEFAULT 'ПП-001',
+                    Description TEXT NULL,
+                    Purpose TEXT NULL,
+                    ResponsiblePerson TEXT NULL,
                     FOREIGN KEY (ProjectId) REFERENCES Projects(Id),
                     FOREIGN KEY (RecipientId) REFERENCES Recipients(Id)
                 );
@@ -472,12 +497,12 @@ namespace CharityFundApp.DataAccess
                 (2, 4, 12000.0, '2026-04-20 15:10:00', 'Банковский перевод', 'Экологический грант компании'),
                 (3, 3, 6000.0, '2026-05-02 17:35:00', 'Банковская карта', 'На книги и спортивный инвентарь для сирот');
 
-                INSERT INTO Expenses (ProjectId, RecipientId, Amount, ExpenseDate, Purpose, ResponsiblePerson) VALUES
-                (1, 1, 40000.0, '2026-02-10 11:00:00', 'Частичная предоплата высокотехнологичной кардиохирургической операции', 'Завьялова Т.П.'),
-                (2, 2, 12000.0, '2026-03-05 15:30:00', 'Приобретение слухового аппарата и годового запаса медикаментов', 'Николаев К.В.'),
-                (3, 3, 18500.0, '2026-03-25 14:00:00', 'Закупка 5 современных компьютеров для учебного класса интерната', 'Завьялова Т.П.'),
-                (4, NULL, 6500.0, '2026-04-25 10:20:00', 'Закупка перчаток, мешков для мусора и аренда спецтранспорта', 'Григорьев А.С.'),
-                (1, 1, 35000.0, '2026-05-15 12:45:00', 'Окончательный расчет за операцию и реабилитацию', 'Завьялова Т.П.');
+                INSERT INTO Expenses (ProjectId, RecipientId, ExpenseCategory, Amount, ExpenseDate, DocumentNumber, Description, Purpose, ResponsiblePerson) VALUES
+                (1, 1, 'Адресная помощь', 40000.0, '2026-02-10 11:00:00', 'ПП-101', 'Частичная предоплата высокотехнологичной кардиохирургической операции', 'Частичная предоплата операции', 'Завьялова Т.П.'),
+                (2, 2, 'Закупка медикаментов', 12000.0, '2026-03-05 15:30:00', 'ПП-102', 'Приобретение слухового аппарата и годового запаса медикаментов', 'Приобретение слухового аппарата', 'Николаев К.В.'),
+                (3, 3, 'Оборудование', 18500.0, '2026-03-25 14:00:00', 'ПП-103', 'Закупка 5 современных компьютеров для учебного класса интерната', 'Закупка компьютеров', 'Завьялова Т.П.'),
+                (4, NULL, 'Транспорт', 6500.0, '2026-04-25 10:20:00', 'ПП-104', 'Закупка перчаток, мешков для мусора и аренда спецтранспорта', 'Закупка инвентаря и транспорт', 'Григорьев А.С.'),
+                (1, 1, 'Адресная помощь', 35000.0, '2026-05-15 12:45:00', 'ПП-105', 'Окончательный расчет за операцию и реабилитацию', 'Расчет за операцию', 'Завьялова Т.П.');
             ";
 
             using var cmdInit = new SqliteCommand(ddl, conn);
