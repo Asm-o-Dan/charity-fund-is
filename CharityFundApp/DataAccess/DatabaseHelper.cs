@@ -314,7 +314,36 @@ namespace CharityFundApp.DataAccess
             string dbFile = SqliteDbPath;
             bool isNew = !File.Exists(dbFile) || new FileInfo(dbFile).Length == 0;
 
-            if (!isNew) return;
+            if (!isNew)
+            {
+                try
+                {
+                    using var connCheck = new SqliteConnection($"Data Source={dbFile}");
+                    connCheck.Open();
+                    using var cmdCheck = new SqliteCommand("PRAGMA table_info(Recipients);", connCheck);
+                    using var reader = cmdCheck.ExecuteReader();
+                    bool hasReg = false;
+                    while (reader.Read())
+                    {
+                        if (string.Equals(reader["name"]?.ToString(), "RegistrationDate", StringComparison.OrdinalIgnoreCase))
+                        {
+                            hasReg = true;
+                            break;
+                        }
+                    }
+                    reader.Close();
+                    if (!hasReg)
+                    {
+                        using var cmdAlter = new SqliteCommand("ALTER TABLE Recipients ADD COLUMN RegistrationDate TEXT NOT NULL DEFAULT '2026-01-16';", connCheck);
+                        cmdAlter.ExecuteNonQuery();
+                    }
+                }
+                catch
+                {
+                    // Игнорируем
+                }
+                return;
+            }
 
             // Если в корне проекта или рядом есть файл CharityFundDB.db или CharityFundDB.sqlite, скопируем его
             string rootFile1 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "CharityFundDB.db");
@@ -371,7 +400,8 @@ namespace CharityFundApp.DataAccess
                     Address TEXT NULL,
                     NeedDescription TEXT NOT NULL,
                     Status TEXT NOT NULL DEFAULT 'Одобрено',
-                    CreatedAt TEXT NOT NULL,
+                    RegistrationDate TEXT NOT NULL DEFAULT '2026-01-16',
+                    CreatedAt TEXT NOT NULL DEFAULT '2026-01-16',
                     FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
                 );
 
