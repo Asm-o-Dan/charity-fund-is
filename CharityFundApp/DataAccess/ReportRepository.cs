@@ -115,21 +115,44 @@ namespace CharityFundApp.DataAccess
         public List<TopDonorReportItem> GetTopDonors(int limit = 10)
         {
             var list = new List<TopDonorReportItem>();
-            string sql = @"
-                SELECT TOP (@Limit)
-                    d.Id AS DonorId,
-                    d.FullName AS DonorName,
-                    d.DonorType,
-                    d.Phone,
-                    d.Email,
-                    COUNT(dn.Id) AS DonationsCount,
-                    ISNULL(SUM(dn.Amount), 0.00) AS TotalDonated,
-                    ISNULL(MAX(dn.Amount), 0.00) AS MaxSingleDonation,
-                    MAX(dn.DonationDate) AS LastDonationDate
-                FROM Donors d
-                INNER JOIN Donations dn ON d.Id = dn.DonorId
-                GROUP BY d.Id, d.FullName, d.DonorType, d.Phone, d.Email
-                ORDER BY TotalDonated DESC;";
+            string sql;
+            if (DatabaseHelper.CurrentProvider == DatabaseProvider.Sqlite)
+            {
+                sql = @"
+                    SELECT 
+                        d.Id AS DonorId,
+                        d.FullName AS DonorName,
+                        d.DonorType,
+                        d.Phone,
+                        d.Email,
+                        COUNT(dn.Id) AS DonationsCount,
+                        COALESCE(SUM(dn.Amount), 0.00) AS TotalDonated,
+                        COALESCE(MAX(dn.Amount), 0.00) AS MaxSingleDonation,
+                        MAX(dn.DonationDate) AS LastDonationDate
+                    FROM Donors d
+                    INNER JOIN Donations dn ON d.Id = dn.DonorId
+                    GROUP BY d.Id, d.FullName, d.DonorType, d.Phone, d.Email
+                    ORDER BY TotalDonated DESC
+                    LIMIT @Limit;";
+            }
+            else
+            {
+                sql = @"
+                    SELECT TOP (@Limit)
+                        d.Id AS DonorId,
+                        d.FullName AS DonorName,
+                        d.DonorType,
+                        d.Phone,
+                        d.Email,
+                        COUNT(dn.Id) AS DonationsCount,
+                        ISNULL(SUM(dn.Amount), 0.00) AS TotalDonated,
+                        ISNULL(MAX(dn.Amount), 0.00) AS MaxSingleDonation,
+                        MAX(dn.DonationDate) AS LastDonationDate
+                    FROM Donors d
+                    INNER JOIN Donations dn ON d.Id = dn.DonorId
+                    GROUP BY d.Id, d.FullName, d.DonorType, d.Phone, d.Email
+                    ORDER BY TotalDonated DESC;";
+            }
 
             var dt = DatabaseHelper.ExecuteQuery(sql, new SqlParameter("@Limit", limit));
             foreach (DataRow row in dt.Rows)

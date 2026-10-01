@@ -139,14 +139,13 @@ namespace CharityFundApp.DataAccess
                 adapted = Regex.Replace(adapted, @"\bISNULL\(", "COALESCE(", RegexOptions.IgnoreCase);
                 adapted = Regex.Replace(adapted, @"\bSCOPE_IDENTITY\(\)", "last_insert_rowid()", RegexOptions.IgnoreCase);
 
-                // Замена SELECT TOP (@Limit) ... ORDER BY ... на SELECT ... ORDER BY ... LIMIT @Limit
-                var topMatch = Regex.Match(adapted, @"SELECT\s+TOP\s*\((@?\w+)\)\s*(.*?)(ORDER\s+BY.*?;?)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+                // Замена SELECT TOP (@Limit) ... на SELECT ... LIMIT @Limit
+                var topMatch = Regex.Match(adapted, @"SELECT\s+TOP\s*\((@?\w+)\)\s*(.*?)(;?\s*$)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
                 if (topMatch.Success)
                 {
                     string limitVar = topMatch.Groups[1].Value;
-                    string body = topMatch.Groups[2].Value;
-                    string order = topMatch.Groups[3].Value.TrimEnd(';');
-                    adapted = $"SELECT {body} {order} LIMIT {limitVar};";
+                    string rest = topMatch.Groups[2].Value.TrimEnd(';', ' ', '\r', '\n');
+                    adapted = $"SELECT {rest} LIMIT {limitVar};";
                 }
 
                 return adapted;
