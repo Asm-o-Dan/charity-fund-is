@@ -1072,6 +1072,8 @@ namespace CharityFundApp.Forms
                 DateTime? dateFrom = _chkReportDateFilter.Checked ? _dtpReportFrom.Value : null;
                 DateTime? dateTo = _chkReportDateFilter.Checked ? _dtpReportTo.Value : null;
 
+                _dgvReports.DataSource = null;
+
                 switch (_cmbReportType.SelectedIndex)
                 {
                     case 0: // 1. Сумма пожертвований
@@ -1174,7 +1176,7 @@ namespace CharityFundApp.Forms
                         break;
                 }
             }
-            catch (Exception ex) { ShowError(ex); }
+            catch (Exception ex) { ShowError(ex, "Формирование аналитического отчета"); }
         }
         #endregion
 
@@ -1266,8 +1268,14 @@ namespace CharityFundApp.Forms
                     var col = dgv.Columns[prop];
                     col.Visible = true;
                     col.HeaderText = header;
-                    col.Width = width;
-                    col.DisplayIndex = i;
+                    try
+                    {
+                        if (i < dgv.Columns.Count) col.DisplayIndex = i;
+                    }
+                    catch
+                    {
+                        // Игнорируем ошибки DisplayIndex при динамической смене источников
+                    }
 
                     if (prop.Contains("Amount") || prop.Contains("Donated") || prop.Contains("Spent") || prop.Contains("Balance"))
                     {

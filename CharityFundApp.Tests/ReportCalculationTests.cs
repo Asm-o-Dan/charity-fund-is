@@ -58,5 +58,22 @@ namespace CharityFundApp.Tests
             decimal remainingFunds = catItem.TotalDonated - catItem.TotalExpenses;
             Assert.Equal(70000m, remainingFunds);
         }
+
+        [Fact]
+        public void TestAllFiveReportsExecuteSuccessfully()
+        {
+            CharityFundApp.DataAccess.DatabaseHelper.CurrentProvider = CharityFundApp.DataAccess.DatabaseProvider.Sqlite;
+            var repo = new CharityFundApp.DataAccess.ReportRepository();
+            var rep1 = repo.GetDonationsSummary(null, null);
+            var rep2 = repo.GetActiveProjects();
+            var rep3 = repo.GetTopDonors(10);
+            var rep4 = repo.GetFundExpensesBalance();
+            var rep5 = repo.GetCategoryAssistance();
+            Assert.NotNull(rep1);
+            Assert.NotNull(rep2);
+            Assert.NotNull(rep3);
+            Assert.NotNull(rep4);
+            Assert.NotNull(rep5);
+        }
     }
 }

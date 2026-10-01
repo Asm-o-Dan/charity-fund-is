@@ -86,7 +86,7 @@ namespace CharityFundApp.DataAccess
                     p.Status
                 FROM Projects p
                 INNER JOIN Categories c ON p.CategoryId = c.Id
-                WHERE p.Status = N'Активен'
+                WHERE p.Status = 'Активен'
                 ORDER BY p.CurrentAmount DESC;";
 
             var dt = DatabaseHelper.ExecuteQuery(sql);

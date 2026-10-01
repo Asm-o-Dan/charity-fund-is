@@ -138,6 +138,7 @@ namespace CharityFundApp.DataAccess
                 string adapted = sql;
                 adapted = Regex.Replace(adapted, @"\bISNULL\(", "COALESCE(", RegexOptions.IgnoreCase);
                 adapted = Regex.Replace(adapted, @"\bSCOPE_IDENTITY\(\)", "last_insert_rowid()", RegexOptions.IgnoreCase);
+                adapted = Regex.Replace(adapted, @"(?<!\w)N'([^']*)'", "'$1'");
 
                 // Замена SELECT TOP (@Limit) ... на SELECT ... LIMIT @Limit
                 var topMatch = Regex.Match(adapted, @"SELECT\s+TOP\s*\((@?\w+)\)\s*(.*?)(;?\s*$)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
