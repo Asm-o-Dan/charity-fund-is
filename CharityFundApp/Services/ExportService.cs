@@ -76,7 +76,10 @@ namespace CharityFundApp.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при экспорте: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string msg = ex is IOException 
+                    ? "Не удалось сохранить файл. Возможно, он открыт в другой программе (например, Microsoft Excel).\nЗакройте файл и повторите экспорт."
+                    : "Не удалось выполнить экспорт данных. Проверьте доступность папки для сохранения.";
+                MessageBox.Show(msg, "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -163,7 +166,10 @@ namespace CharityFundApp.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при экспорте HTML: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string msg = ex is IOException 
+                    ? "Не удалось сохранить HTML-документ. Возможно, файл занят другой программой.\nЗакройте его и повторите экспорт."
+                    : "Не удалось сформировать HTML-отчет. Проверьте доступность папки для сохранения.";
+                MessageBox.Show(msg, "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 

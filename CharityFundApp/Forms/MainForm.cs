@@ -233,10 +233,15 @@ namespace CharityFundApp.Forms
                 {
                     try
                     {
-                        _donorRepo.Insert(dlg.Donor);
-                        LoadDonors();
+                        int newId = _donorRepo.Insert(dlg.Donor);
+                        if (!string.IsNullOrEmpty(_txtDonorSearch.Text))
+                        {
+                            _txtDonorSearch.Text = string.Empty;
+                        }
+                        LoadDonors(newId);
+                        _lblInfo.Text = $"✔ Донор «{dlg.Donor.FullName}» успешно добавлен!";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Добавление донора"); }
                 }
             };
 
@@ -253,9 +258,10 @@ namespace CharityFundApp.Forms
                     try
                     {
                         _donorRepo.Update(dlg.Donor);
-                        LoadDonors();
+                        LoadDonors(dlg.Donor.Id);
+                        _lblInfo.Text = $"✔ Данные донора «{dlg.Donor.FullName}» обновлены";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Редактирование донора"); }
                 }
             };
 
@@ -272,8 +278,9 @@ namespace CharityFundApp.Forms
                     {
                         _donorRepo.Delete(donor.Id);
                         LoadDonors();
+                        _lblInfo.Text = "✔ Донор успешно удален";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Удаление донора"); }
                 }
             };
 
@@ -296,11 +303,12 @@ namespace CharityFundApp.Forms
             return tab;
         }
 
-        private void LoadDonors()
+        private void LoadDonors(int? selectId = null)
         {
             try
             {
                 var list = _donorRepo.GetAll(_txtDonorSearch.Text);
+                _dgvDonors.DataSource = null;
                 _dgvDonors.DataSource = list;
                 ConfigureGridHeaders(_dgvDonors, new[] {
                     ("Id", "№", 50),
@@ -312,8 +320,9 @@ namespace CharityFundApp.Forms
                     ("RegistrationDate", "Дата регистрации", 130)
                 });
                 _lblInfo.Text = $"Доноров в базе: {list.Count}";
+                if (selectId.HasValue) SelectRowById(_dgvDonors, selectId.Value);
             }
-            catch (Exception ex) { ShowError(ex); }
+            catch (Exception ex) { ShowError(ex, "Загрузка списка доноров"); }
         }
         #endregion
 
@@ -337,10 +346,14 @@ namespace CharityFundApp.Forms
                 {
                     try
                     {
-                        _projectRepo.Insert(dlg.Project);
-                        LoadProjects();
+                        int newId = _projectRepo.Insert(dlg.Project);
+                        if (_cmbProjectStatus.SelectedIndex != 0) _cmbProjectStatus.SelectedIndex = 0;
+                        if (!string.IsNullOrEmpty(_txtProjectSearch.Text)) _txtProjectSearch.Text = string.Empty;
+                        RefreshProjectDropdowns();
+                        LoadProjects(newId);
+                        _lblInfo.Text = $"✔ Проект «{dlg.Project.Name}» успешно создан!";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Создание проекта"); }
                 }
             };
 
@@ -358,9 +371,11 @@ namespace CharityFundApp.Forms
                     try
                     {
                         _projectRepo.Update(dlg.Project);
-                        LoadProjects();
+                        RefreshProjectDropdowns();
+                        LoadProjects(dlg.Project.Id);
+                        _lblInfo.Text = $"✔ Данные проекта «{dlg.Project.Name}» обновлены";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Редактирование проекта"); }
                 }
             };
 
@@ -371,14 +386,16 @@ namespace CharityFundApp.Forms
                 var proj = _dgvProjects.SelectedRows[0].DataBoundItem as Project;
                 if (proj == null) return;
 
-                if (MessageBox.Show($"Удалить проект «{proj.Name}»?\nВсе пожертвования и расходы по проекту будут также удалены!", "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show($"Удалить проект «{proj.Name}»?\nВсе пожертвования и расходы по проекту будут также удалены!", "Подтверждение удаления", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     try
                     {
                         _projectRepo.Delete(proj.Id);
+                        RefreshProjectDropdowns();
                         LoadProjects();
+                        _lblInfo.Text = "✔ Проект успешно удален";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Удаление проекта"); }
                 }
             };
 
@@ -404,11 +421,12 @@ namespace CharityFundApp.Forms
             return tab;
         }
 
-        private void LoadProjects()
+        private void LoadProjects(int? selectId = null)
         {
             try
             {
                 var list = _projectRepo.GetAll(_cmbProjectStatus.SelectedItem?.ToString(), _txtProjectSearch.Text);
+                _dgvProjects.DataSource = null;
                 _dgvProjects.DataSource = list;
                 ConfigureGridHeaders(_dgvProjects, new[] {
                     ("Id", "№", 45),
@@ -423,9 +441,10 @@ namespace CharityFundApp.Forms
                     ("Status", "Статус", 90),
                     ("Description", "Описание", 200)
                 });
-                _lblInfo.Text = $"Проектов: {list.Count}";
+                _lblInfo.Text = $"Проектов в базе: {list.Count}";
+                if (selectId.HasValue) SelectRowById(_dgvProjects, selectId.Value);
             }
-            catch (Exception ex) { ShowError(ex); }
+            catch (Exception ex) { ShowError(ex, "Загрузка списка проектов"); }
         }
         #endregion
 
@@ -443,10 +462,11 @@ namespace CharityFundApp.Forms
                 {
                     try
                     {
-                        _categoryRepo.Insert(dlg.Category);
-                        LoadCategories();
+                        int newId = _categoryRepo.Insert(dlg.Category);
+                        LoadCategories(newId);
+                        _lblInfo.Text = $"✔ Категория «{dlg.Category.Name}» успешно добавлена!";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Создание категории"); }
                 }
             };
 
@@ -463,9 +483,10 @@ namespace CharityFundApp.Forms
                     try
                     {
                         _categoryRepo.Update(dlg.Category);
-                        LoadCategories();
+                        LoadCategories(dlg.Category.Id);
+                        _lblInfo.Text = $"✔ Категория «{dlg.Category.Name}» обновлена";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Редактирование категории"); }
                 }
             };
 
@@ -478,18 +499,19 @@ namespace CharityFundApp.Forms
 
                 if (_categoryRepo.IsUsed(cat.Id))
                 {
-                    MessageBox.Show("Нельзя удалить категорию, так как с ней связаны проекты или получатели помощи!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Нельзя удалить категорию, так как с ней связаны проекты или получатели помощи!\nСначала удалите или перенесите связанные записи.", "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                if (MessageBox.Show($"Удалить категорию «{cat.Name}»?", "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show($"Удалить категорию «{cat.Name}»?", "Подтверждение удаления", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     try
                     {
                         _categoryRepo.Delete(cat.Id);
                         LoadCategories();
+                        _lblInfo.Text = "✔ Категория успешно удалена";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Удаление категории"); }
                 }
             };
 
@@ -505,20 +527,22 @@ namespace CharityFundApp.Forms
             return tab;
         }
 
-        private void LoadCategories()
+        private void LoadCategories(int? selectId = null)
         {
             try
             {
                 var list = _categoryRepo.GetAll();
+                _dgvCategories.DataSource = null;
                 _dgvCategories.DataSource = list;
                 ConfigureGridHeaders(_dgvCategories, new[] {
                     ("Id", "№", 50),
                     ("Name", "Наименование категории", 250),
                     ("Description", "Описание направления помощи", 450)
                 });
-                _lblInfo.Text = $"Категорий: {list.Count}";
+                _lblInfo.Text = $"Категорий в базе: {list.Count}";
+                if (selectId.HasValue) SelectRowById(_dgvCategories, selectId.Value);
             }
-            catch (Exception ex) { ShowError(ex); }
+            catch (Exception ex) { ShowError(ex, "Загрузка списка категорий"); }
         }
         #endregion
 
@@ -544,11 +568,14 @@ namespace CharityFundApp.Forms
                 {
                     try
                     {
-                        _donationRepo.InsertWithTransaction(dlg.Donation);
-                        LoadDonations();
-                        LoadProjects(); // Баланс обновился
+                        int newId = _donationRepo.InsertWithTransaction(dlg.Donation);
+                        if (_cmbDonationProjectFilter.SelectedIndex != 0) _cmbDonationProjectFilter.SelectedIndex = 0;
+                        if (_chkDonationDateFilter.Checked) _chkDonationDateFilter.Checked = false;
+                        LoadDonations(newId);
+                        LoadProjects(); // Баланс обновился в транзакции
+                        _lblInfo.Text = $"✔ Пожертвование на сумму {dlg.Donation.Amount:N2} руб. успешно зарегистрировано!";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Внесение пожертвования"); }
                 }
             };
 
@@ -566,8 +593,9 @@ namespace CharityFundApp.Forms
                         _donationRepo.DeleteWithTransaction(don.Id);
                         LoadDonations();
                         LoadProjects();
+                        _lblInfo.Text = "✔ Пожертвование удалено, баланс проекта скорректирован";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Удаление пожертвования"); }
                 }
             };
 
@@ -619,7 +647,7 @@ namespace CharityFundApp.Forms
             return tab;
         }
 
-        private void LoadDonations()
+        private void LoadDonations(int? selectId = null)
         {
             try
             {
@@ -636,6 +664,7 @@ namespace CharityFundApp.Forms
                 DateTime? dateTo = _chkDonationDateFilter.Checked ? _dtpDonationTo.Value : null;
 
                 var list = _donationRepo.GetAll(projId, null, dateFrom, dateTo);
+                _dgvDonations.DataSource = null;
                 _dgvDonations.DataSource = list;
 
                 ConfigureGridHeaders(_dgvDonations, new[] {
@@ -651,8 +680,9 @@ namespace CharityFundApp.Forms
                 decimal total = list.Sum(d => d.Amount);
                 _lblDonationsTotal.Text = $"Итого: {total:N2} руб. ({list.Count} взносов)";
                 _lblInfo.Text = $"Пожертвований: {list.Count} на сумму {total:N2} руб.";
+                if (selectId.HasValue) SelectRowById(_dgvDonations, selectId.Value);
             }
-            catch (Exception ex) { ShowError(ex); }
+            catch (Exception ex) { ShowError(ex, "Загрузка списка пожертвований"); }
         }
         #endregion
 
@@ -676,10 +706,13 @@ namespace CharityFundApp.Forms
                 {
                     try
                     {
-                        _recipientRepo.Insert(dlg.Recipient);
-                        LoadRecipients();
+                        int newId = _recipientRepo.Insert(dlg.Recipient);
+                        if (_cmbRecipientStatus.SelectedIndex != 0) _cmbRecipientStatus.SelectedIndex = 0;
+                        if (!string.IsNullOrEmpty(_txtRecipientSearch.Text)) _txtRecipientSearch.Text = string.Empty;
+                        LoadRecipients(newId);
+                        _lblInfo.Text = $"✔ Получатель «{dlg.Recipient.FullName}» успешно добавлен!";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Добавление получателя помощи"); }
                 }
             };
 
@@ -697,9 +730,10 @@ namespace CharityFundApp.Forms
                     try
                     {
                         _recipientRepo.Update(dlg.Recipient);
-                        LoadRecipients();
+                        LoadRecipients(dlg.Recipient.Id);
+                        _lblInfo.Text = $"✔ Данные получателя «{dlg.Recipient.FullName}» обновлены";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Редактирование получателя помощи"); }
                 }
             };
 
@@ -710,14 +744,15 @@ namespace CharityFundApp.Forms
                 var r = _dgvRecipients.SelectedRows[0].DataBoundItem as Recipient;
                 if (r == null) return;
 
-                if (MessageBox.Show($"Удалить получателя «{r.FullName}»?", "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show($"Удалить получателя «{r.FullName}»?", "Подтверждение удаления", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     try
                     {
                         _recipientRepo.Delete(r.Id);
                         LoadRecipients();
+                        _lblInfo.Text = "✔ Получатель успешно удален";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Удаление получателя помощи"); }
                 }
             };
 
@@ -743,11 +778,12 @@ namespace CharityFundApp.Forms
             return tab;
         }
 
-        private void LoadRecipients()
+        private void LoadRecipients(int? selectId = null)
         {
             try
             {
                 var list = _recipientRepo.GetAll(_cmbRecipientStatus.SelectedItem?.ToString(), _txtRecipientSearch.Text);
+                _dgvRecipients.DataSource = null;
                 _dgvRecipients.DataSource = list;
                 ConfigureGridHeaders(_dgvRecipients, new[] {
                     ("Id", "№", 45),
@@ -759,9 +795,10 @@ namespace CharityFundApp.Forms
                     ("Address", "Адрес", 170),
                     ("RegistrationDate", "Дата заявления", 100)
                 });
-                _lblInfo.Text = $"Получателей помощи: {list.Count}";
+                _lblInfo.Text = $"Получателей помощи в базе: {list.Count}";
+                if (selectId.HasValue) SelectRowById(_dgvRecipients, selectId.Value);
             }
-            catch (Exception ex) { ShowError(ex); }
+            catch (Exception ex) { ShowError(ex, "Загрузка списка получателей помощи"); }
         }
         #endregion
 
@@ -787,10 +824,14 @@ namespace CharityFundApp.Forms
                 {
                     try
                     {
-                        _expenseRepo.Insert(dlg.Expense);
-                        LoadExpenses();
+                        int newId = _expenseRepo.Insert(dlg.Expense);
+                        if (_cmbExpenseProjectFilter.SelectedIndex != 0) _cmbExpenseProjectFilter.SelectedIndex = 0;
+                        if (_cmbExpenseCategoryFilter.SelectedIndex != 0) _cmbExpenseCategoryFilter.SelectedIndex = 0;
+                        LoadExpenses(newId);
+                        LoadProjects();
+                        _lblInfo.Text = $"✔ Расход на сумму {dlg.Expense.Amount:N2} руб. успешно зафиксирован!";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Регистрация расхода фонда"); }
                 }
             };
 
@@ -809,9 +850,11 @@ namespace CharityFundApp.Forms
                     try
                     {
                         _expenseRepo.Update(dlg.Expense);
-                        LoadExpenses();
+                        LoadExpenses(dlg.Expense.Id);
+                        LoadProjects();
+                        _lblInfo.Text = $"✔ Данные расхода №{dlg.Expense.Id} обновлены";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Редактирование расхода"); }
                 }
             };
 
@@ -822,14 +865,16 @@ namespace CharityFundApp.Forms
                 var exp = _dgvExpenses.SelectedRows[0].DataBoundItem as Expense;
                 if (exp == null) return;
 
-                if (MessageBox.Show($"Удалить запись о расходе №{exp.Id} на сумму {exp.Amount:N2} руб.?", "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show($"Удалить запись о расходе №{exp.Id} на сумму {exp.Amount:N2} руб.?", "Подтверждение удаления", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     try
                     {
                         _expenseRepo.Delete(exp.Id);
                         LoadExpenses();
+                        LoadProjects();
+                        _lblInfo.Text = "✔ Запись о расходе успешно удалена";
                     }
-                    catch (Exception ex) { ShowError(ex); }
+                    catch (Exception ex) { ShowError(ex, "Удаление расхода"); }
                 }
             };
 
@@ -869,7 +914,7 @@ namespace CharityFundApp.Forms
             return tab;
         }
 
-        private void LoadExpenses()
+        private void LoadExpenses(int? selectId = null)
         {
             try
             {
@@ -884,6 +929,7 @@ namespace CharityFundApp.Forms
                 string? cat = _cmbExpenseCategoryFilter.SelectedItem?.ToString();
 
                 var list = _expenseRepo.GetAll(projId, cat);
+                _dgvExpenses.DataSource = null;
                 _dgvExpenses.DataSource = list;
 
                 ConfigureGridHeaders(_dgvExpenses, new[] {
@@ -900,8 +946,49 @@ namespace CharityFundApp.Forms
                 decimal total = list.Sum(e => e.Amount);
                 _lblExpensesTotal.Text = $"Всего израсходовано: {total:N2} руб.";
                 _lblInfo.Text = $"Расходов: {list.Count} на сумму {total:N2} руб.";
+                if (selectId.HasValue) SelectRowById(_dgvExpenses, selectId.Value);
             }
-            catch (Exception ex) { ShowError(ex); }
+            catch (Exception ex) { ShowError(ex, "Загрузка списка расходов"); }
+        }
+
+        private void RefreshProjectDropdowns()
+        {
+            try
+            {
+                if (_cmbDonationProjectFilter != null)
+                {
+                    int cur = (_cmbDonationProjectFilter.SelectedItem as Project)?.Id ?? 0;
+                    _cmbDonationProjectFilter.Items.Clear();
+                    _cmbDonationProjectFilter.Items.Add(new Project { Id = 0, Name = "— Все проекты —" });
+                    var projs = _projectRepo.GetAll();
+                    int sel = 0;
+                    for (int i = 0; i < projs.Count; i++)
+                    {
+                        _cmbDonationProjectFilter.Items.Add(projs[i]);
+                        if (projs[i].Id == cur) sel = i + 1;
+                    }
+                    _cmbDonationProjectFilter.SelectedIndex = sel;
+                }
+
+                if (_cmbExpenseProjectFilter != null)
+                {
+                    int cur = (_cmbExpenseProjectFilter.SelectedItem as Project)?.Id ?? 0;
+                    _cmbExpenseProjectFilter.Items.Clear();
+                    _cmbExpenseProjectFilter.Items.Add(new Project { Id = 0, Name = "— Все проекты —" });
+                    var projs = _projectRepo.GetAll();
+                    int sel = 0;
+                    for (int i = 0; i < projs.Count; i++)
+                    {
+                        _cmbExpenseProjectFilter.Items.Add(projs[i]);
+                        if (projs[i].Id == cur) sel = i + 1;
+                    }
+                    _cmbExpenseProjectFilter.SelectedIndex = sel;
+                }
+            }
+            catch
+            {
+                // Игнорируем ошибки фонового обновления комбобоксов
+            }
         }
         #endregion
 
@@ -1108,6 +1195,7 @@ namespace CharityFundApp.Forms
 
         private void RefreshAllTabs()
         {
+            RefreshProjectDropdowns();
             LoadDonors();
             LoadProjects();
             LoadCategories();
@@ -1115,6 +1203,7 @@ namespace CharityFundApp.Forms
             LoadRecipients();
             LoadExpenses();
             GenerateSelectedReport();
+            _lblInfo.Text = "Все данные успешно обновлены";
         }
 
         private static Button CreateToolButton(string text, Color backColor, int x, int y)
@@ -1203,9 +1292,99 @@ namespace CharityFundApp.Forms
             }
         }
 
-        private static void ShowError(Exception ex)
+        private static void SelectRowById(DataGridView dgv, int id)
         {
-            MessageBox.Show($"Произошла ошибка при выполнении операции:\n{ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (dgv.Rows.Count == 0) return;
+            try
+            {
+                dgv.ClearSelection();
+                foreach (DataGridViewRow row in dgv.Rows)
+                {
+                    if (row.DataBoundItem != null)
+                    {
+                        var prop = row.DataBoundItem.GetType().GetProperty("Id");
+                        if (prop != null && prop.GetValue(row.DataBoundItem) is int val && val == id)
+                        {
+                            row.Selected = true;
+                            if (row.Index >= 0 && row.Index < dgv.Rows.Count)
+                            {
+                                dgv.FirstDisplayedScrollingRowIndex = row.Index;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Игнорируем исключения прокрутки скрытых элементов
+            }
+        }
+
+        private static void ShowError(Exception ex, string? actionDescription = null)
+        {
+            string message = ex.Message ?? string.Empty;
+            string title = "Внимание";
+            MessageBoxIcon icon = MessageBoxIcon.Warning;
+            string friendlyText;
+
+            if (message.Contains("FOREIGN KEY", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("REFERENCE constraint", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("FK_", StringComparison.OrdinalIgnoreCase))
+            {
+                friendlyText = "Невозможно удалить или изменить выбранную запись, так как с ней связаны другие данные фонда.\n\n" +
+                               "Например, по данному элементу уже зафиксированы пожертвования, проекты или выплаты.\n" +
+                               "Для выполнения операции сначала удалите связанные записи.";
+            }
+            else if (message.Contains("UNIQUE constraint", StringComparison.OrdinalIgnoreCase) ||
+                     message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase) ||
+                     message.Contains("PRIMARY KEY", StringComparison.OrdinalIgnoreCase))
+            {
+                friendlyText = "Запись с такими данными уже существует в базе данных.\n\n" +
+                               "Пожалуйста, укажите уникальное значение (например, другое наименование, телефон или номер документа).";
+            }
+            else if (message.Contains("NOT NULL constraint", StringComparison.OrdinalIgnoreCase) ||
+                     message.Contains("Cannot insert the value NULL", StringComparison.OrdinalIgnoreCase))
+            {
+                friendlyText = "Заполнены не все обязательные поля формы.\n\n" +
+                               "Пожалуйста, вернитесь к форме и проверьте правильность заполнения всех обязательных полей.";
+            }
+            else if (message.Contains("database is locked", StringComparison.OrdinalIgnoreCase) ||
+                     message.Contains("busy", StringComparison.OrdinalIgnoreCase) ||
+                     message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
+            {
+                friendlyText = "Файл базы данных временно занят другой программой или процессом.\n\n" +
+                               "Пожалуйста, закройте сторонние приложения (например, SQLite Studio или проводник) и повторите попытку.";
+            }
+            else if (ex is FormatException || ex is OverflowException || ex is InvalidCastException)
+            {
+                friendlyText = "Введены некорректные данные.\n\n" +
+                               "Пожалуйста, проверьте правильность числовых значений, сумм и дат.";
+            }
+            else if (message.Contains("cannot open database", StringComparison.OrdinalIgnoreCase) ||
+                     message.Contains("Could not find file", StringComparison.OrdinalIgnoreCase) ||
+                     message.Contains("SqlException", StringComparison.OrdinalIgnoreCase) ||
+                     ex is FileNotFoundException)
+            {
+                friendlyText = "Не удалось подключиться к базе данных.\n\n" +
+                               "Убедитесь, что файл базы данных CharityFundDB.db существует и доступен для записи.";
+                icon = MessageBoxIcon.Error;
+                title = "Ошибка доступа к базе данных";
+            }
+            else
+            {
+                friendlyText = "Не удалось выполнить операцию.\n\n" +
+                               "Пожалуйста, проверьте правильность введённых данных и повторите попытку.";
+                icon = MessageBoxIcon.Error;
+                title = "Ошибка";
+            }
+
+            if (!string.IsNullOrWhiteSpace(actionDescription))
+            {
+                friendlyText = $"Операция: {actionDescription}\n\n" + friendlyText;
+            }
+
+            MessageBox.Show(friendlyText, title, MessageBoxButtons.OK, icon);
         }
         #endregion
     }
