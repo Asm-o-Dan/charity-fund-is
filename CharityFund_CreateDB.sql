@@ -289,13 +289,17 @@ SELECT
     c.Name AS CategoryName,
     COUNT(DISTINCT p.Id) AS ProjectsCount,
     COUNT(DISTINCT r.Id) AS RecipientsCount,
-    ISNULL(SUM(d.Amount), 0.00) AS TotalDonated,
-    ISNULL(SUM(ex.Amount), 0.00) AS TotalExpenses
+    ISNULL((SELECT SUM(dn.Amount) 
+            FROM Donations dn 
+            INNER JOIN Projects pr ON dn.ProjectId = pr.Id 
+            WHERE pr.CategoryId = c.Id), 0.00) AS TotalDonated,
+    ISNULL((SELECT SUM(ex.Amount) 
+            FROM Expenses ex 
+            INNER JOIN Projects pr ON ex.ProjectId = pr.Id 
+            WHERE pr.CategoryId = c.Id), 0.00) AS TotalExpenses
 FROM Categories c
 LEFT JOIN Projects p ON c.Id = p.CategoryId
 LEFT JOIN Recipients r ON c.Id = r.CategoryId
-LEFT JOIN Donations d ON p.Id = d.ProjectId
-LEFT JOIN Expenses ex ON p.Id = ex.ProjectId
 GROUP BY c.Id, c.Name;
 GO
 
@@ -376,20 +380,27 @@ BEGIN
         c.Name AS CategoryName,
         COUNT(DISTINCT p.Id) AS ProjectsCount,
         COUNT(DISTINCT r.Id) AS RecipientsCount,
-        ISNULL(SUM(d.Amount), 0.00) AS TotalDonated,
-        ISNULL(SUM(ex.Amount), 0.00) AS TotalExpenses,
+        ISNULL((SELECT SUM(dn.Amount) 
+                FROM Donations dn 
+                INNER JOIN Projects pr ON dn.ProjectId = pr.Id 
+                WHERE pr.CategoryId = c.Id), 0.00) AS TotalDonated,
+        ISNULL((SELECT SUM(ex2.Amount) 
+                FROM Expenses ex2 
+                INNER JOIN Projects pr ON ex2.ProjectId = pr.Id 
+                WHERE pr.CategoryId = c.Id), 0.00) AS TotalExpenses,
         CAST(ROUND(
             CASE 
                 WHEN (SELECT ISNULL(SUM(Amount), 0) FROM Expenses) > 0 
-                THEN (ISNULL(SUM(ex.Amount), 0.00) * 100.0 / (SELECT SUM(Amount) FROM Expenses))
+                THEN (ISNULL((SELECT SUM(ex3.Amount) 
+                              FROM Expenses ex3 
+                              INNER JOIN Projects pr ON ex3.ProjectId = pr.Id 
+                              WHERE pr.CategoryId = c.Id), 0.00) * 100.0 / (SELECT SUM(Amount) FROM Expenses))
                 ELSE 0.00 
             END, 2) AS DECIMAL(6,2)
         ) AS ExpenseSharePercent
     FROM Categories c
     LEFT JOIN Projects p ON c.Id = p.CategoryId
     LEFT JOIN Recipients r ON c.Id = r.CategoryId
-    LEFT JOIN Donations d ON p.Id = d.ProjectId
-    LEFT JOIN Expenses ex ON p.Id = ex.ProjectId
     GROUP BY c.Id, c.Name
     ORDER BY TotalExpenses DESC;
 END;

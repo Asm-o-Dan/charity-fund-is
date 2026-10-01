@@ -1268,6 +1268,7 @@ namespace CharityFundApp.Forms
                     var col = dgv.Columns[prop];
                     col.Visible = true;
                     col.HeaderText = header;
+                    col.Width = width;
                     try
                     {
                         if (i < dgv.Columns.Count) col.DisplayIndex = i;
